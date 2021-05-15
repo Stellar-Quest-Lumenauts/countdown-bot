@@ -2,7 +2,6 @@ import discord
 import datetime
 import asyncio
 import requests
-import shutil
 import os
 
 # Todo: Make this use a Data Source or something instead of hardcoding?
