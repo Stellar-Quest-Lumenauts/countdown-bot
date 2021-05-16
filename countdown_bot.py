@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import datetime
+from datetime import datetime, timedelta
 import dateutil.parser
 import asyncio
 import requests
@@ -28,7 +28,7 @@ def prepareData():
   data = json.loads(response.text)
   for elem in data['challenges']:
     print(f"Downloaded Event on: {elem['date']}")
-    dates.append(dateutil.parser.parse(elem['date']).replace(tzinfo=None))
+    dates.append(dateutil.parser.parse(elem['date']).replace(tzinfo=None) - timedelta(hours=1) )
     images.append(f"https://api.stellar.quest/badge/{elem['badges']['main']}?v3")
 
 
@@ -87,7 +87,7 @@ class MyClient(discord.Client):
         while True:
 
             # Count the remaining time
-            now = datetime.datetime.now()
+            now = datetime.now()
             data = checkDate(now)
             b = data[0]
             image = data[1]
@@ -95,9 +95,12 @@ class MyClient(discord.Client):
           
             days, hours, minutes, seconds = getCountdown(c)
 
+             # What's the reason for lagging?
+#            for guild in client.guilds:
+#                await guild.get_member(self.user.id).edit(nick=createString(days,hours,minutes,seconds))
+
             # Update the Bot's nickname with the remaining time
-            for guild in client.guilds:
-              await guild.get_member(self.user.id).edit(nick=createString(days,hours,minutes,seconds))
+            await client.get_guild(GUILD_ID).get_member(self.user.id).edit(nick=createString(days,hours,minutes,seconds))
 
             if img != image:
                 # Update the image if it isn't the chosen one
@@ -108,7 +111,7 @@ class MyClient(discord.Client):
 
                 if r.status_code == 200:
                   r.raw.decode_content = True
-                  #await client.user.edit(avatar=r.raw.read())
+                  await client.user.edit(avatar=r.raw.read())
 
             await asyncio.sleep(1)
 
@@ -119,7 +122,7 @@ class MyClient(discord.Client):
         if message.content.startswith('$$nextQuest'):
           print('Received Command...')
 
-          now = datetime.datetime.now()
+          now = datetime.now()
           data = checkDate(now)
           data = data[0]
           c = data - now
