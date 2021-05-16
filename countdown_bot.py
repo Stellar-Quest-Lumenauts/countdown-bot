@@ -79,7 +79,8 @@ class MyClient(discord.Client):
         """
         This is where the Magic happens 
         """
-        print('Logged on as {0}!'.format(self.user))
+        print(f'Logged on as {self.user}!')
+        print(f"I am in the following guilds: {client.guilds}")
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="the clock while daydreaming of solving a new Quest")) # This is a Bad idea says StackOverFlow
         img = None
 
@@ -95,7 +96,8 @@ class MyClient(discord.Client):
             days, hours, minutes, seconds = getCountdown(c)
 
             # Update the Bot's nickname with the remaining time
-            await client.get_guild(GUILD_ID).get_member(self.user.id).edit(nick=createString(days,hours,minutes,seconds))
+            for guild in client.guilds:
+              await guild.get_member(self.user.id).edit(nick=createString(days,hours,minutes,seconds))
 
             if img != image:
                 # Update the image if it isn't the chosen one
