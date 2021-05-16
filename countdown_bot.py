@@ -1,26 +1,36 @@
 import discord
+from discord.ext import commands
 import datetime
+import dateutil.parser
 import asyncio
 import requests
+import json
 import os
+import sys
 
-# Todo: Make this use a Data Source or something instead of hardcoding?
-dates = [
-  datetime.datetime(2021,5,17,13,0,0,0), 
-  datetime.datetime(2021,5,21,1,0,0,0), 
-  datetime.datetime(2021,5,24,13,0,0,0), 
-  datetime.datetime(2021,5,28,1,0,0,0)
-]
-
-images = [
-  "https://api.stellar.quest/badge/GC6XLPVFEVZO5SJ4PADO4KQVSITOHADJLR7RZEC4A3SYLA3FORKXRRHI?v=3",
-  "https://api.stellar.quest/badge/GAQRBLAAKJNMXVNZKBFCJ6E2XVXTXBUOXIAOQQNJBCUXBCZKR3HOLT2S?v=3",
-  "https://api.stellar.quest/badge/GAATGXGABT7HB7ALO3TAGVBVDE5B24LMSUQ3EKNCJHO5QBY4D5G5DZX5?v=3",
-  "https://api.stellar.quest/badge/GBZS5RP2YJDCF5RAJHXOHUXSBXD5KTDASIVSGETDYYI6OTPUS5ZFKIYA?v=3" 
-]
+dates = []
+images = []
 
 GUILD_ID = 763798356484161566
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
+SOURCE_URL = os.environ.get('SOURCE_URL')
+
+
+def prepareData():
+  """
+  Fetch from the Stellar Quest API Endpoint to retrieve all the dates and images
+  """
+  response = requests.get(SOURCE_URL)
+  if response.status_code != 200:
+    print('There was an error fetching events...')
+    sys.exit(1)
+
+  data = json.loads(response.text)
+  for elem in data['challenges']:
+    print(f"Downloaded Event on: {elem['date']}")
+    dates.append(dateutil.parser.parse(elem['date']).replace(tzinfo=None))
+    images.append(f"https://api.stellar.quest/badge/{elem['badges']['main']}?v3")
+
 
 def checkDate(currentDate):
     """
@@ -96,7 +106,7 @@ class MyClient(discord.Client):
 
                 if r.status_code == 200:
                   r.raw.decode_content = True
-                  await client.user.edit(avatar=r.raw.read())
+                  #await client.user.edit(avatar=r.raw.read())
 
             await asyncio.sleep(1)
 
@@ -123,5 +133,7 @@ class MyClient(discord.Client):
 
           await message.reply(title, embed=embed)
 
-client = MyClient()
-client.run(BOT_TOKEN)
+if __name__ == '__main__':
+  prepareData()
+  client = MyClient()
+  client.run(BOT_TOKEN)
