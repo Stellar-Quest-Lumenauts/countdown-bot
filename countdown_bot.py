@@ -7,6 +7,7 @@ import requests
 import json
 import os
 import sys
+import copy
 
 dates = []
 images = []
@@ -31,18 +32,21 @@ def prepareData():
     dates.append(dateutil.parser.parse(elem['date']).replace(tzinfo=None) - timedelta(hours=1) )
     images.append(f"https://api.stellar.quest/badge/{elem['badges']['main']}?v3")
 
-
 def checkDate(currentDate):
     """
     Check if there's a new date to compare with to swap or not.
     """
-    for ind, date in enumerate(dates):
+    copy_of_list = copy.deepcopy(dates)
+    copy_of_images = copy.deepcopy(images)
+    for ind, date in enumerate(copy_of_list):
         c = date - currentDate 
+        print(f"{date} / {c}")
         if c.days < 0:
-          dates.pop(ind)
-          images.pop(ind)
+          dates.remove(date)
+          images.remove(copy_of_images[ind])
         else:
-          return (date, images[ind])
+          return (date, copy_of_images[ind])
+
 
 def getCountdown(c):
     """
